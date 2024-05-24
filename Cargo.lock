@@ -3309,6 +3309,7 @@ dependencies = [
 name = "process_rrd"
 version = "0.1.0"
 dependencies = [
+ "ndarray",
  "re_data_store",
  "re_entity_db",
  "re_log_encoding",

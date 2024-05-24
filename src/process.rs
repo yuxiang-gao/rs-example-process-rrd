@@ -2,6 +2,7 @@ use re_data_store::{RangeQuery, ResolvedTimeRange};
 use re_entity_db::StoreBundle;
 use re_query::PromiseResolver;
 use re_types::components::Scalar;
+use re_types::components::TensorData;
 use rerun::{Loggable, Timeline};
 
 fn main() {
@@ -32,7 +33,7 @@ fn main() {
 
         for entity in entities {
             let range_query = RangeQuery::new(
-                Timeline::new_sequence("step"),
+                Timeline::new_temporal("log_time"),
                 ResolvedTimeRange::EVERYTHING,
             );
 
@@ -50,6 +51,24 @@ fn main() {
                             "Scalar value of {:?} is {:?} @ Timestep: {:?}",
                             entity,
                             scalar.0,
+                            time.as_i64()
+                        );
+                    }
+                }
+            }
+
+            if let Some(range_depth) = rrd
+                .query_caches()
+                .range(rrd.data_store(), &range_query, entity, [TensorData::name()])
+                .get(TensorData::name())
+                .map(|results| results.to_dense::<TensorData>(&resolver))
+            {
+                for ((time, _), tensors) in range_depth.range_indexed().take(5) {
+                    if let Some(tensor) = tensors.first() {
+                        println!(
+                            "Depth value of {:?} is {:?} @ Timestep: {:?}",
+                            entity,
+                            tensor.shape(),
                             time.as_i64()
                         );
                     }
